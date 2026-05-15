@@ -1,0 +1,9 @@
+(executable
+ (name main)
+ (libraries
+  kwk_monitor_lib
+  eio_main
+  logs.fmt
+  fmt)
+ (preprocess
+  (pps ppx_deriving_yojson ppx_deriving.show)))

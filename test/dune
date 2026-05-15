@@ -1,0 +1,7 @@
+(tests
+ (names test_types test_utils test_state test_cookie_jar)
+ (libraries
+  unix
+  kwk_monitor_lib
+  alcotest
+  yojson))

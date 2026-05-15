@@ -1,0 +1,15 @@
+(library
+ (name kwk_monitor_lib)
+ (libraries
+  unix
+  eio
+  eio_main
+  piaf
+  yojson
+  ppx_deriving_yojson
+  logs
+  fmt
+  dotenv
+  cmdliner)
+ (preprocess
+  (pps ppx_deriving_yojson ppx_deriving.show)))

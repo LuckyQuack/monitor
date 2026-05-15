@@ -1,0 +1,5 @@
+_build/
+.env
+data/last_state.json
+*.install
+*.opam
