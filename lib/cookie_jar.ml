@@ -1,7 +1,8 @@
-let jar : (string, string) Hashtbl.t = Hashtbl.create 8
+type t = (string, string) Hashtbl.t
 
-(* Parse Set-Cookie header values and store name=value in the jar *)
-let update (set_cookie_values : string list) : unit =
+let create () : t = Hashtbl.create 8
+
+let update (jar : t) (set_cookie_values : string list) : unit =
   List.iter (fun raw ->
     let pair = match String.split_on_char ';' raw with
       | first :: _ -> String.trim first
@@ -15,8 +16,7 @@ let update (set_cookie_values : string list) : unit =
       if k <> "" then Hashtbl.replace jar k v
   ) set_cookie_values
 
-(* Build Cookie header value, or None if jar is empty *)
-let header () : string option =
+let header (jar : t) : string option =
   if Hashtbl.length jar = 0 then None
   else
     Some (Hashtbl.fold

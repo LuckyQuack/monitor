@@ -21,6 +21,7 @@ let run () =
   ) (Logs.Src.list ());
 
   let state = ref (Kwk_monitor_lib.State.load config.state_file) in
+  let jar   = Kwk_monitor_lib.Cookie_jar.create () in
 
   Sys.set_signal Sys.sigint (Sys.Signal_handle (fun _ ->
     Printf.printf "\nShutting down...\n%!";
@@ -32,7 +33,7 @@ let run () =
 
   while true do
     (Eio.Switch.run @@ fun sw ->
-      match Kwk_monitor_lib.Monitor.run_once ~sw ~env ~config ~state with
+      match Kwk_monitor_lib.Monitor.run_once ~sw ~env ~config ~state ~jar with
       | Ok [] ->
           Logs.info (fun m -> m "No changes detected")
       | Ok changes ->

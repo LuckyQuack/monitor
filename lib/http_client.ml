@@ -28,7 +28,7 @@ let products_url = "https://iviviv.bigcartel.com/products.json"
    --------------------------------------------------------------------------- *)
 
 (** Perform exactly one GET request and return a {!fetch_result}. *)
-let fetch_once ~sw ~env () =
+let fetch_once ~sw ~env ~jar () =
   let uri = Uri.of_string products_url in
   let base_headers =
     [ ("user-agent",      Utils.random_user_agent ())
@@ -39,7 +39,7 @@ let fetch_once ~sw ~env () =
     ; ("referer",         "https://iviviv.bigcartel.com/")
     ]
   in
-  let headers = match Cookie_jar.header () with
+  let headers = match Cookie_jar.header jar with
     | None        -> base_headers
     | Some cookie -> ("cookie", cookie) :: base_headers
   in
@@ -56,7 +56,7 @@ let fetch_once ~sw ~env () =
            if String.lowercase_ascii name = "set-cookie" then Some value
            else None)
     in
-    Cookie_jar.update set_cookies;
+    Cookie_jar.update jar set_cookies;
     let status = Piaf.Status.to_code response.status in
     if status = 200 then
       match Piaf.Body.to_string response.body with
@@ -78,12 +78,13 @@ let fetch_once ~sw ~env () =
 let fetch_products
     ~sw
     ~env
+    ~jar
     ?(max_retries    = 3)
     ?(backoff_base_sec = 30)
     ()
   =
   let rec loop attempt =
-    let result = fetch_once ~sw ~env () in
+    let result = fetch_once ~sw ~env ~jar () in
     match result with
     | Success _ ->
       result

@@ -81,11 +81,27 @@ let test_compare_products_price_changed () =
     Alcotest.fail "expected exactly one PriceChanged"
 
 let test_compare_products_price_unchanged_epsilon () =
-  (* Prices that differ by less than the epsilon threshold must not trigger a change. *)
   let old_p = make_product ~price:29.99 () in
   let new_p = make_product ~price:(29.99 +. 0.0001) () in
   let changes = compare_products old_p new_p in
   Alcotest.(check int) "epsilon difference produces no change" 0 (List.length changes)
+
+let test_compare_products_on_sale_flip () =
+  let old_p = make_product ~on_sale:false () in
+  let new_p = make_product ~on_sale:true  () in
+  let changes = compare_products old_p new_p in
+  Alcotest.(check int) "one change detected" 1 (List.length changes);
+  match changes with
+  | [ Updated { new_product; _ } ] ->
+    Alcotest.(check bool) "new product is on sale" true new_product.on_sale
+  | _ ->
+    Alcotest.fail "expected exactly one Updated"
+
+let test_compare_products_on_sale_unchanged () =
+  let old_p = make_product ~on_sale:true () in
+  let new_p = make_product ~on_sale:true () in
+  let changes = compare_products old_p new_p in
+  Alcotest.(check int) "no change when on_sale unchanged" 0 (List.length changes)
 
 let test_find_new_products_all_new () =
   let old_list = [] in
@@ -166,6 +182,8 @@ let () =
       , [ Alcotest.test_case "compare_products: no change"                  `Quick test_compare_products_no_change
         ; Alcotest.test_case "compare_products: price changed"              `Quick test_compare_products_price_changed
         ; Alcotest.test_case "compare_products: epsilon price unchanged"    `Quick test_compare_products_price_unchanged_epsilon
+        ; Alcotest.test_case "compare_products: on_sale flip → Updated"   `Quick test_compare_products_on_sale_flip
+        ; Alcotest.test_case "compare_products: on_sale unchanged"        `Quick test_compare_products_on_sale_unchanged
         ; Alcotest.test_case "find_new_products: all new"                   `Quick test_find_new_products_all_new
         ; Alcotest.test_case "find_new_products: none new"                  `Quick test_find_new_products_none_new
         ; Alcotest.test_case "find_new_products: partial overlap"           `Quick test_find_new_products_partial

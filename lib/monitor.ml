@@ -61,10 +61,11 @@ let run_once
     ~env
     ~(config : Config.t)
     ~(state  : monitor_state ref)
+    ~(jar    : Cookie_jar.t)
   : (change list, string) result =
 
   (* Step 1 — fetch *)
-  let fetch_result = Http_client.fetch_products ~sw ~env () in
+  let fetch_result = Http_client.fetch_products ~sw ~env ~jar () in
   match fetch_result with
   | Http_client.Network_error msg ->
     Error ("fetch failed: " ^ msg)
