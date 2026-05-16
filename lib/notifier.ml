@@ -61,7 +61,7 @@ let make_embed (change : Types.change) : Yojson.Safe.t =
     ; ("description", `String description)
     ; ("url",         `String product.product_url)
     ; ("timestamp",   `String (Utils.now_iso8601 ()))
-    ; ("footer",      `Assoc [("text", `String "IVIVIV Monitor")])
+    ; ("footer",      `Assoc [("text", `String "Big Cartel Monitor")])
     ]
   in
   (* Optionally attach a thumbnail when the product has an image. *)

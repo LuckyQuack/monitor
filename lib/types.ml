@@ -33,8 +33,8 @@ type monitor_state = {
    --------------------------------------------------------------------------- *)
 
 (** Build the canonical product URL for a Big Cartel permalink. *)
-let make_product_url permalink =
-  "https://iviviv.bigcartel.com/product/" ^ permalink
+let make_product_url ~store_url permalink =
+  store_url ^ "/product/" ^ permalink
 
 (** [is_available p] is [true] when the product status is ["active"]. *)
 let is_available p = p.status = "active"

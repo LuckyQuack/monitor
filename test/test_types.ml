@@ -26,7 +26,7 @@ let make_product
     status;
     created_at;
     image_url;
-    product_url = make_product_url permalink;
+    product_url = make_product_url ~store_url:"https://test.bigcartel.com" permalink;
   }
 
 (* ---------------------------------------------------------------------------
@@ -34,17 +34,17 @@ let make_product
    --------------------------------------------------------------------------- *)
 
 let test_make_product_url () =
-  let url = make_product_url "my-cool-tee" in
+  let url = make_product_url ~store_url:"https://test.bigcartel.com" "my-cool-tee" in
   Alcotest.(check string)
     "correct URL"
-    "https://iviviv.bigcartel.com/product/my-cool-tee"
+    "https://test.bigcartel.com/product/my-cool-tee"
     url
 
 let test_make_product_url_empty_permalink () =
-  let url = make_product_url "" in
+  let url = make_product_url ~store_url:"https://test.bigcartel.com" "" in
   Alcotest.(check string)
     "empty permalink gives base URL"
-    "https://iviviv.bigcartel.com/product/"
+    "https://test.bigcartel.com/product/"
     url
 
 let test_is_available_active () =

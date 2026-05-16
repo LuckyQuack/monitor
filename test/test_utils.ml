@@ -68,6 +68,7 @@ let test_now_iso8601_format () =
 
 let test_config_load_success () =
   Unix.putenv "DISCORD_WEBHOOK_URL" "https://discord.com/api/webhooks/test/token";
+  Unix.putenv "STORE_URL"           "https://test.bigcartel.com";
   Unix.putenv "POLL_INTERVAL_SEC"   "300";
   Unix.putenv "LOG_LEVEL"           "debug";
   Unix.putenv "STATE_FILE"          "/tmp/state.json";
@@ -75,12 +76,14 @@ let test_config_load_success () =
   Alcotest.(check string) "webhook url"
     "https://discord.com/api/webhooks/test/token"
     cfg.discord_webhook_url;
+  Alcotest.(check string) "store url"   "https://test.bigcartel.com" cfg.store_url;
   Alcotest.(check int)    "poll interval" 300     cfg.poll_interval_sec;
   Alcotest.(check string) "log level"     "debug" cfg.log_level;
   Alcotest.(check string) "state file"    "/tmp/state.json" cfg.state_file
 
 let test_config_defaults () =
   Unix.putenv "DISCORD_WEBHOOK_URL" "https://discord.com/api/webhooks/x/y";
+  Unix.putenv "STORE_URL"           "https://test.bigcartel.com";
   (* Remove optional vars so defaults kick in. *)
   (try Unix.putenv "POLL_INTERVAL_SEC" "" with _ -> ());
   (try Unix.putenv "LOG_LEVEL"         "" with _ -> ());
@@ -93,6 +96,7 @@ let test_config_defaults () =
 let test_config_missing_webhook () =
   (* Unset by setting to empty string; our loader treats that as missing. *)
   Unix.putenv "DISCORD_WEBHOOK_URL" "";
+  Unix.putenv "STORE_URL"           "https://test.bigcartel.com";
   let raised =
     try
       let _ = load () in false
@@ -101,6 +105,25 @@ let test_config_missing_webhook () =
       String.length msg > 0
   in
   Alcotest.(check bool) "raises Failure when webhook missing" true raised
+
+let test_config_missing_store_url () =
+  Unix.putenv "DISCORD_WEBHOOK_URL" "https://discord.com/api/webhooks/test/token";
+  Unix.putenv "STORE_URL"           "";
+  let raised =
+    try
+      let _ = load () in false
+    with Failure msg ->
+      String.length msg > 0
+  in
+  Alcotest.(check bool) "raises Failure when store_url missing" true raised
+
+let test_config_store_url_strips_trailing_slash () =
+  Unix.putenv "DISCORD_WEBHOOK_URL" "https://discord.com/api/webhooks/test/token";
+  Unix.putenv "STORE_URL"           "https://test.bigcartel.com/";
+  let cfg = load () in
+  Alcotest.(check string) "trailing slash stripped"
+    "https://test.bigcartel.com"
+    cfg.store_url
 
 (* ---------------------------------------------------------------------------
    Entry point
@@ -118,8 +141,10 @@ let () =
         ; Alcotest.test_case "now_iso8601 format"           `Quick test_now_iso8601_format
         ] )
     ; ( "config",
-        [ Alcotest.test_case "load succeeds with env vars"      `Quick test_config_load_success
-        ; Alcotest.test_case "load uses defaults"               `Quick test_config_defaults
-        ; Alcotest.test_case "load raises on missing webhook"   `Quick test_config_missing_webhook
+        [ Alcotest.test_case "load succeeds with env vars"           `Quick test_config_load_success
+        ; Alcotest.test_case "load uses defaults"                    `Quick test_config_defaults
+        ; Alcotest.test_case "load raises on missing webhook"        `Quick test_config_missing_webhook
+        ; Alcotest.test_case "load raises on missing store_url"      `Quick test_config_missing_store_url
+        ; Alcotest.test_case "store_url strips trailing slash"       `Quick test_config_store_url_strips_trailing_slash
         ] )
     ]

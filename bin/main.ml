@@ -27,7 +27,7 @@ let run () =
     Printf.printf "\nShutting down...\n%!";
     exit 0));
 
-  Printf.printf "IVIVIV Monitor starting. Poll interval: %ds\n%!" config.poll_interval_sec;
+  Printf.printf "Monitor starting — %s — poll interval: %ds\n%!" config.store_url config.poll_interval_sec;
 
   Eio_main.run @@ fun env ->
 

@@ -65,7 +65,7 @@ let run_once
   : (change list, string) result =
 
   (* Step 1 — fetch *)
-  let fetch_result = Http_client.fetch_products ~sw ~env ~jar () in
+  let fetch_result = Http_client.fetch_products ~sw ~env ~jar ~store_url:config.store_url () in
   match fetch_result with
   | Http_client.Network_error msg ->
     Error ("fetch failed: " ^ msg)
@@ -74,7 +74,7 @@ let run_once
   | Http_client.Success body ->
 
     (* Step 2 — parse *)
-    (match Http_client.parse_products body with
+    (match Http_client.parse_products ~store_url:config.store_url body with
      | Error msg ->
        Error ("parse failed: " ^ msg)
      | Ok new_products ->

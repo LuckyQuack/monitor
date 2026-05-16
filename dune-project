@@ -1,6 +1,6 @@
 (lang dune 3.14)
 
-(name kwk-monitor)
+(name bc-monitor)
 
 (generate_opam_files true)
 
@@ -9,9 +9,9 @@
 (license MIT)
 
 (package
- (name kwk-monitor)
+ (name bc-monitor)
  (allow_empty)
- (synopsis "IVIVIV Big Cartel sale monitor with Discord notifications")
+ (synopsis "Configurable Big Cartel store monitor with Discord notifications")
  (depends
   (ocaml (>= 5.2.0))
   eio

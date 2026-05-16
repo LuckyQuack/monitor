@@ -21,22 +21,20 @@ type fetch_result =
    Constants
    --------------------------------------------------------------------------- *)
 
-let products_url = "https://iviviv.bigcartel.com/products.json"
-
 (* ---------------------------------------------------------------------------
    Internal: single attempt
    --------------------------------------------------------------------------- *)
 
 (** Perform exactly one GET request and return a {!fetch_result}. *)
-let fetch_once ~sw ~env ~jar () =
-  let uri = Uri.of_string products_url in
+let fetch_once ~sw ~env ~jar ~store_url () =
+  let uri = Uri.of_string (store_url ^ "/products.json") in
   let base_headers =
     [ ("user-agent",      Utils.random_user_agent ())
     ; ("accept",          "application/json")
     ; ("accept-language", "en-US,en;q=0.9")
     ; ("cache-control",   "no-cache")
     ; ("connection",      "keep-alive")
-    ; ("referer",         "https://iviviv.bigcartel.com/")
+    ; ("referer",         store_url ^ "/")
     ]
   in
   let headers = match Cookie_jar.header jar with
@@ -79,12 +77,13 @@ let fetch_products
     ~sw
     ~env
     ~jar
+    ~store_url
     ?(max_retries    = 3)
     ?(backoff_base_sec = 30)
     ()
   =
   let rec loop attempt =
-    let result = fetch_once ~sw ~env ~jar () in
+    let result = fetch_once ~sw ~env ~jar ~store_url () in
     match result with
     | Success _ ->
       result
@@ -105,7 +104,7 @@ let fetch_products
     Big Cartel products endpoint into a list of [(id, product)] pairs.
 
     Returns [Error msg] on any parse failure. *)
-let parse_products (body : string) : ((int * Types.product) list, string) result =
+let parse_products ~store_url (body : string) : ((int * Types.product) list, string) result =
   try
     let open Yojson.Safe.Util in
     let json  = Yojson.Safe.from_string body in
@@ -136,7 +135,7 @@ let parse_products (body : string) : ((int * Types.product) list, string) result
                 | _         -> None)
              | _ -> None
            in
-           let product_url = Types.make_product_url permalink in
+           let product_url = Types.make_product_url ~store_url permalink in
            let product : Types.product =
              { id
              ; name
