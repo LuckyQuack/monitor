@@ -89,7 +89,7 @@ let fetch_products
       result
     | Http_error _ | Network_error _ when attempt < max_retries ->
       let delay = backoff_base_sec * (1 lsl attempt) in
-      Unix.sleepf (float_of_int delay);
+      Eio.Time.sleep env#clock (float_of_int delay);
       loop (attempt + 1)
     | Http_error _ | Network_error _ ->
       result

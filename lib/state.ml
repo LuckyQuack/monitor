@@ -41,11 +41,23 @@ let load (path : string) : monitor_state =
         path (Printexc.to_string exn);
       empty ()
 
+(** [ensure_dir path] creates the parent directory of [path] if it does not
+    exist. Raises {!Sys_error} on permission failure. *)
+let ensure_dir (path : string) : unit =
+  let dir = Filename.dirname path in
+  if dir <> "" && dir <> "." && not (Sys.file_exists dir) then
+    Unix.mkdir dir 0o755
+
 (** [save path state] serialises [state] to JSON and writes it to [path].
 
-    Raises {!Sys_error} if the file cannot be written. *)
-let save (path : string) (state : monitor_state) : unit =
-  Yojson.Safe.to_file path (monitor_state_to_yojson state)
+    Creates the parent directory if it does not exist.
+    Returns [Error msg] if the file cannot be written. *)
+let save (path : string) (state : monitor_state) : (unit, string) result =
+  try
+    ensure_dir path;
+    Yojson.Safe.to_file path (monitor_state_to_yojson state);
+    Ok ()
+  with Sys_error msg -> Error msg
 
 (* ---------------------------------------------------------------------------
    Helpers

@@ -54,8 +54,17 @@ let load () =
     match Sys.getenv_opt "POLL_INTERVAL_SEC" with
     | Some s -> (
         match int_of_string_opt s with
-        | Some n -> n
-        | None   -> default_poll_interval_sec)
+        | Some n when n > 0 -> n
+        | Some _ ->
+          Printf.eprintf
+            "[config] POLL_INTERVAL_SEC must be a positive integer; using default (%d)\n%!"
+            default_poll_interval_sec;
+          default_poll_interval_sec
+        | None ->
+          Printf.eprintf
+            "[config] POLL_INTERVAL_SEC %S is not a valid integer; using default (%d)\n%!"
+            s default_poll_interval_sec;
+          default_poll_interval_sec)
     | None -> default_poll_interval_sec
   in
   let log_level =

@@ -40,16 +40,14 @@ let make_embed (change : Types.change) : Yojson.Safe.t =
       in
       (p, 0xFEE75C, Printf.sprintf "\xf0\x9f\x92\xb0 Price Drop: %s" p.name, desc)
 
-    | Types.Updated { old_product = _; new_product } ->
+    | Types.SaleStatusChanged { product = p; sale_started } ->
+      let label = if sale_started then "\xf0\x9f\x8f\xb7\xef\xb8\x8f Sale Started" else "\xe2\x9d\x8c Sale Ended" in
       let desc =
         Printf.sprintf "**Price:** %s\n[View Product](%s)"
-          (Utils.format_price new_product.price)
-          new_product.product_url
+          (Utils.format_price p.price)
+          p.product_url
       in
-      ( new_product,
-        0xEB459E,
-        Printf.sprintf "\xe2\x9c\x8f\xef\xb8\x8f Updated: %s" new_product.name,
-        desc )
+      (p, 0xEB459E, Printf.sprintf "%s: %s" label p.name, desc)
   in
   (* Truncate long strings to stay within Discord embed limits. *)
   let title       = Utils.truncate_str ~max_len:256 title in
@@ -107,7 +105,8 @@ let send_change
   | Ok response ->
     let code = Piaf.Status.to_code response.status in
     (* Drain the response body to avoid resource leaks. *)
-    let _ = Piaf.Body.drain response.body in
+    (match Piaf.Body.drain response.body with
+     | Ok () -> () | Error _ -> ());
     if code = 204 then Ok ()
     else Error (Printf.sprintf "HTTP %d" code)
   | Error err ->
@@ -131,5 +130,5 @@ let send_changes
      | Error msg ->
        Printf.eprintf "[notifier] failed to send Discord notification: %s\n%!"
          msg);
-    Unix.sleepf 0.5
+    Eio.Time.sleep env#clock 0.5
   ) changes

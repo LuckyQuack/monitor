@@ -18,7 +18,7 @@ let compare_products (old_p : product) (new_p : product) : change list =
   in
   let changes =
     if old_p.on_sale <> new_p.on_sale then
-      Updated { old_product = old_p; new_product = new_p } :: changes
+      SaleStatusChanged { product = new_p; sale_started = new_p.on_sale } :: changes
     else
       changes
   in
@@ -30,10 +30,10 @@ let find_new_products
     (old_list : (int * product) list)
     (new_list : (int * product) list)
     : product list =
-  let old_ids = List.map fst old_list in
+  let old_tbl = Hashtbl.create (List.length old_list) in
+  List.iter (fun (id, _) -> Hashtbl.replace old_tbl id ()) old_list;
   List.filter_map
-    (fun (id, p) ->
-       if List.mem id old_ids then None else Some p)
+    (fun (id, p) -> if Hashtbl.mem old_tbl id then None else Some p)
     new_list
 
 (** [find_restocked old_list new_list] returns products that were unavailable
@@ -42,9 +42,11 @@ let find_restocked
     (old_list : (int * product) list)
     (new_list : (int * product) list)
     : product list =
+  let old_tbl = Hashtbl.create (List.length old_list) in
+  List.iter (fun (id, p) -> Hashtbl.replace old_tbl id p) old_list;
   List.filter_map
     (fun (id, new_p) ->
-       match List.assoc_opt id old_list with
+       match Hashtbl.find_opt old_tbl id with
        | Some old_p when not (is_available old_p) && is_available new_p ->
          Some new_p
        | _ -> None)

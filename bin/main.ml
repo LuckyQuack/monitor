@@ -43,7 +43,7 @@ let run () =
       | Error msg ->
           Logs.err (fun m -> m "Monitor error: %s" msg));
     Kwk_monitor_lib.Utils.jittered_sleep
-      ~base_sec:config.poll_interval_sec ~jitter:60 ()
+      ~clock:env#clock ~base_sec:config.poll_interval_sec ~jitter:60 ()
   done
 
 let () = run ()

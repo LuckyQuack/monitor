@@ -66,7 +66,7 @@ let test_save_load_roundtrip () =
     (fun () ->
        let p = make_product ~id:42 ~name:"Drop Tee" ~price:55.00 () in
        let state = { products = [ (42, p) ]; fetched_at = "2025-01-01T00:00:00Z" } in
-       save tmp state;
+       (match save tmp state with Ok () -> () | Error msg -> Alcotest.fail msg);
        let loaded = load tmp in
        Alcotest.(check int)
          "round-trip: one product"   1    (List.length loaded.products);

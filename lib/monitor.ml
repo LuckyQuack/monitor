@@ -33,11 +33,10 @@ let log_change (change : change) : unit =
       (Utils.format_price old_price)
       (Utils.format_price p.price)
       p.product_url
-  | Updated { old_product; new_product } ->
-    Printf.printf "[UPDATED]      %s (was: %s) — %s\n%!"
-      new_product.name
-      old_product.name
-      new_product.product_url
+  | SaleStatusChanged { product = p; sale_started } ->
+    let label = if sale_started then "SALE STARTED" else "SALE ENDED" in
+    Printf.printf "[%s]   %s — %s — %s\n%!"
+      label p.name (Utils.format_price p.price) p.product_url
 
 (* ---------------------------------------------------------------------------
    run_once
@@ -113,25 +112,16 @@ let run_once
           are absent from old_state.products, so the two sets are already
           disjoint by construction — but we guard against future changes to
           find_new_products by filtering explicitly. *)
-       let restock_ids =
-         List.filter_map
-           (function Restocked p -> Some p.id | _ -> None)
-           restock_changes
-       in
-       let deduped_new_changes =
-         List.filter
-           (function
-             | New p -> not (List.mem p.id restock_ids)
-             | _     -> true)
-           new_changes
-       in
-
-       let changes =
-         deduped_new_changes @ restock_changes @ field_changes
-       in
+       (* find_new_products and find_restocked are disjoint by construction:
+          new finds ids absent from old_state; restocked finds ids present
+          in old_state with status change. No deduplication needed. *)
+       let changes = new_changes @ restock_changes @ field_changes in
 
        (* Step 5 — update state *)
        state := State.update !state new_products (Utils.now_iso8601 ());
-       State.save config.state_file !state;
+       (match State.save config.state_file !state with
+        | Ok () -> ()
+        | Error msg ->
+          Logs.warn (fun m -> m "state save failed: %s" msg));
 
        Ok changes)

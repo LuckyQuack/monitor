@@ -16,10 +16,10 @@ type product = {
 
 (** A detected change between two snapshots of the store. *)
 type change =
-  | New         of product
-  | Updated     of { old_product : product; new_product : product }
-  | Restocked   of product
-  | PriceChanged of { product : product; old_price : float }
+  | New               of product
+  | Restocked         of product
+  | PriceChanged      of { product : product; old_price : float }
+  | SaleStatusChanged of { product : product; sale_started : bool }
 
 (** The persisted state held between polling cycles. *)
 type monitor_state = {

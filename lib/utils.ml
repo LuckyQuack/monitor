@@ -26,14 +26,13 @@ let random_user_agent () =
    Timing helpers
    --------------------------------------------------------------------------- *)
 
-(** [jittered_sleep ~base_sec ~jitter ()] sleeps for
-    [max 1 (base_sec + rand_offset)] seconds, where [rand_offset] is drawn
-    uniformly from [-jitter, jitter).  Uses [Unix.sleepf] so sub-second
-    precision is supported if [jitter] is 0. *)
-let jittered_sleep ~base_sec ~jitter () =
+(** [jittered_sleep ~clock ~base_sec ~jitter ()] sleeps for
+    [max 1 (base_sec + rand_offset)] seconds using the Eio clock, where
+    [rand_offset] is drawn uniformly from [-jitter, jitter). *)
+let jittered_sleep ~clock ~base_sec ~jitter () =
   let offset = Random.int (jitter * 2) - jitter in
   let duration = max 1 (base_sec + offset) in
-  Unix.sleepf (float_of_int duration)
+  Eio.Time.sleep clock (float_of_int duration)
 
 (** Returns the current UTC time formatted as an ISO 8601 string
     of the form ["YYYY-MM-DDTHH:MM:SSZ"]. *)
@@ -61,4 +60,10 @@ let format_price price =
     characters of [s] followed by ["..."]. *)
 let truncate_str ~max_len s =
   if String.length s <= max_len then s
-  else String.sub s 0 max_len ^ "..."
+  else begin
+    (* Walk back from max_len to find a valid UTF-8 start byte.
+       Continuation bytes have the form 10xxxxxx (byte & 0xC0 = 0x80). *)
+    let i = ref max_len in
+    while !i > 0 && Char.code s.[!i] land 0xC0 = 0x80 do decr i done;
+    String.sub s 0 !i ^ "..."
+  end

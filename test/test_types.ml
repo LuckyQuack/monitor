@@ -92,10 +92,11 @@ let test_compare_products_on_sale_flip () =
   let changes = compare_products old_p new_p in
   Alcotest.(check int) "one change detected" 1 (List.length changes);
   match changes with
-  | [ Updated { new_product; _ } ] ->
-    Alcotest.(check bool) "new product is on sale" true new_product.on_sale
+  | [ SaleStatusChanged { product; sale_started } ] ->
+    Alcotest.(check bool) "product is on sale" true product.on_sale;
+    Alcotest.(check bool) "sale_started is true" true sale_started
   | _ ->
-    Alcotest.fail "expected exactly one Updated"
+    Alcotest.fail "expected exactly one SaleStatusChanged"
 
 let test_compare_products_on_sale_unchanged () =
   let old_p = make_product ~on_sale:true () in
@@ -182,7 +183,7 @@ let () =
       , [ Alcotest.test_case "compare_products: no change"                  `Quick test_compare_products_no_change
         ; Alcotest.test_case "compare_products: price changed"              `Quick test_compare_products_price_changed
         ; Alcotest.test_case "compare_products: epsilon price unchanged"    `Quick test_compare_products_price_unchanged_epsilon
-        ; Alcotest.test_case "compare_products: on_sale flip → Updated"   `Quick test_compare_products_on_sale_flip
+        ; Alcotest.test_case "compare_products: on_sale flip → SaleStatusChanged" `Quick test_compare_products_on_sale_flip
         ; Alcotest.test_case "compare_products: on_sale unchanged"        `Quick test_compare_products_on_sale_unchanged
         ; Alcotest.test_case "find_new_products: all new"                   `Quick test_find_new_products_all_new
         ; Alcotest.test_case "find_new_products: none new"                  `Quick test_find_new_products_none_new
